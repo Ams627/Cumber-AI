@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <DebugType>Embedded</DebugType>
+    <LangVersion>Latest</LangVersion>
+    <Nullable>enable</Nullable>
+	  <OutputType>exe</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\HelpTextOptions\HelpTextOptions.csproj" />
+  </ItemGroup>
+</Project>

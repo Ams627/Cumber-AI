@@ -1,0 +1,119 @@
+We want to process command line options in C#
+
+Options will be specified either as a single-dash option followed by a singled letter
+or a double-dash option followed by a word of more than one character. 
+
+A single-dash option can be equivalent to a double dash option in which case testing for,
+or retrieving either works the same
+
+First attempt to interpret a single-dash word as a valid short-option group. 
+If that fails and the whole word matches a long option, report that it requires two dashes.
+
+-abc has to be tolerated and interpreted as -a -b -c if those single-dash options a, b and c exist even if there is
+a double-dash option --abc. Where an option requires a parameter, for a double-dash option it can be given on the command line with or without 
+an equals sign - e.g `--maxCount=1` or `--maxCount 1`. In the case of a single option, no equals sign is permitted. E.g.
+`-n 1`. Where single-dash options are given in a group, only the final option in the group is permitted to have a parameter. E.g.
+`-an 1` specifies the parameterless option `-a` and `-n 1`
+
+Where a single-dash option, for example `-a` requires a parameter `-abc` will produce the error:
+"Option '-a' requires a parameter and must appear last in a short-option group. Specify its value as a separate argument."
+
+
+Commands and options will be specified as a single text string. We'll create an instance of a class like this
+
+    IOptionsProcessor processor = new OptionsProcessor.FromText(commandText, programName, args) 
+
+where args are the arguments passed to main and programName is the name of the program that called main without the 
+directory component or the extension.
+    
+In the commandText, commands are specified by asciidoc style headings in a hierarchical format similar to the way
+git commands work. Levels are indicated by equals signs at position 0 on a line. The number of equals signs indicates
+the level. For example level one is just =. Any text before the first level one section is ignored 
+(and can therfore be used as a comment) except for certain delimited sections that define options groups. Any text
+within a command section is the help-text for that command and specifies the options (single options and/or double-dash
+options).
+
+There must be at least one level one section, but there can be more than one such section. Each level 1 section 
+corresponds to the name of the program passed to the shell. This mirrors the sometimes-used unix functionality 
+of grep and egrep. You can create a symlink from egrep to grep and the two programs function differently depending 
+on the value of argv[0]. (Most of the time, I would expect only level 1 section.). 
+
+Sections levels should be checked for correctness and and appropriate exception thrown if we move up more than one level
+e.g. We cannot go from a level 1 section to a level 3 section. The other way round (from level 3 to level 1), is
+allowed.
+
+In searching for a help section we need to first determine the name of the program, then we look at the first few arguments
+to try to match them with sections in the commandText specified. For example git remote add origin would match
+
+= git
+
+== remote
+
+=== add
+
+help text is printed with appropriate newlines based on the terminal width - in assessing the width of the help text, we must take account of 
+sequences designed to changed the terminal text colour. 
+
+The following "control" sequences are supported:
+
+AsciiDoc-style markup is supported:
+
+* `*bold*`
+* `_italic_`
+* `[underline]#underlined#`
+* `[green]#colored text#`
+
+Colour names can be limited to 16, but we should also support e.g. [123, 96, 45] as rgb.
+
+
+In addition, a backclash before an option line (see below) stops that line being interpreted as an option.
+
+An *option line* specifies a command line option and can be specifed as a single-dash option 
+followed by a comma then a double-dash option. Alternatively either a single-dash options or a double-dash 
+option can be specified alone. Where a comma is specifed to delimit both types of option, it must come 
+immediately after the single-dash option. An option line can start at any column and when help text is
+printed the options should retain this indent. 
+
+An option *description* starts following any number of whitespace characters after the option name(s).
+
+An *option terminator* can be given on the program's command line with --. This means that all arguments specified after it
+are not considered as options (e.g. they might be filenames starting with a minus).
+
+A *comment* in a command section is a line starting with a #. The line is completely ignored.
+
+When printing option lines, the option should be printed in bold text. The rest of the text on the line up until 
+the newline (or a # - see later) is the description of the option. To continue this description text onto the next line, we simply indent the
+next line (doesn't matter how much). In considering how to indent option text, we need to consider all possible options
+for this particular command. We indent the option descriptions so that descriptions for all options start at the same column
+using the minimum number of space possible after the option name and before the description. If an option description
+needs to continue on the next line, it should be indented to the same level as the line above.
+
+In doing all space calculations we must take account of the AsciiDoc-style markup detailed above.
+
+Many options are parameterless - for example `--all`. Some require parameters e.g. --maxCount=3. To specify
+that an option has a parameter, use the `type` directive below.
+
+An option line can end with a hash # character. After the hash-character the following "directives" are permitted
+    
+    minOccurs=<n> - minimum number of times the option must occur in the command line.
+    maxOccurs=<n> - max number of times the option can occur in the command line.
+    type=[int, uint, string, float] - specifies the type of parameter 
+
+For example:
+    -n <n>, --count=<n> specify the number of lines to print # type=uint
+    
+
+
+*Macros* can be specifed in the help text:
+   $(Subcommands) - this expands to the sub-commands for this command (i.e. the commands at the next level up)
+   
+Printing help text
+==================
+
+Help text is requested by specifying the help command - it should be the first command on the command line
+e.g. git help remote add 
+
+Error conditions
+=================
+
+1. duplicate sibling commands are not allowed. 

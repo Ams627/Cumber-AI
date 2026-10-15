@@ -8,7 +8,7 @@
     <NoWarn>$(NoWarn);CS1591</NoWarn>
     <IsPackable>true</IsPackable>
     <PackageId>Cumber</PackageId>
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
     <Authors>Mark Wrenford</Authors>
     <Description>Hierarchical command-line parsing driven by readable help text.</Description>
     <PackageTags>cli;command-line;options;help</PackageTags>

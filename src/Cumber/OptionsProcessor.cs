@@ -20,6 +20,8 @@ public sealed class OptionsProcessor : IOptionsProcessor
     public IReadOnlyList<string> PositionalArguments { get; }
     public IReadOnlyList<string> Errors { get; }
 
+    public IReadOnlyList<string> OriginalArgs { get; private set; }
+
     /// <summary>Parses definitions and arguments, printing help or diagnostics as required.</summary>
     public static IOptionsProcessor FromText(
             string commandText,
@@ -66,6 +68,10 @@ public sealed class OptionsProcessor : IOptionsProcessor
     {
         this.settings = settings;
         ProgramName = root.Name;
+
+        // create a readonly copy of the full original arguments:
+        OriginalArgs = Array.AsReadOnly(args.ToArray());
+
         var errors = new List<string>();
         var positional = new List<string>();
         var path = new List<string>();

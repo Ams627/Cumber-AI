@@ -20,7 +20,7 @@ const string commandText = """
 
     """;
 
-var processor = OptionsProcessor.FromText(commandText, "FileUtil", args);
+IOptionsProcessor processor = OptionsProcessor.FromText(commandText, "FileUtil", args);
 
 if (!processor.IsValid)
     return 2;
@@ -28,12 +28,44 @@ if (!processor.IsValid)
 if (processor.HelpRequested)
     return 0;
 
-Console.WriteLine($"Command: {string.Join(" ", processor.CommandPath)}");
-Console.WriteLine($"Lines: {processor.GetValueOrDefault("lines", 10)}");
-Console.WriteLine($"Colour: {processor.GetValueOrDefault("colour", "white")}");
+var router = CommandRouter.FromAssembly(typeof(Program).Assembly);
+return router.Execute(args[0], processor);
 
-foreach (var argument in processor.PositionalArguments)
-    Console.WriteLine($"Positional: {argument}");
+[Cumber.Command("copy")]
+class Copy : ICumberCommand
+{
+    private readonly IOptionsProcessor _optionsProcessor;
 
-return 0;
+    public Copy(IOptionsProcessor optionsProcessor)
+    {
+        Console.WriteLine("copy constructor called");
+        _optionsProcessor = optionsProcessor;
+    }
+    public int Execute()
+    {
+        Console.WriteLine($"Command: {string.Join(" ", _optionsProcessor.CommandPath)}");
+        Console.WriteLine($"Dest: {_optionsProcessor.GetValueOrDefault('d', "c:\\temp")}");
+        return 0;
+    }
+}
+
+
+[Cumber.Command("print")]
+class Print : ICumberCommand
+{
+    private readonly IOptionsProcessor _optionsProcessor;
+
+    public Print(IOptionsProcessor optionsProcessor)
+    {
+        Console.WriteLine("print constructor called");
+        _optionsProcessor = optionsProcessor;
+    }
+    public int Execute()
+    {
+        Console.WriteLine($"Command: {string.Join(" ", _optionsProcessor.CommandPath)}");
+        Console.WriteLine($"Lines: {_optionsProcessor.GetValueOrDefault("lines", 10u)}");
+        Console.WriteLine($"Colour: {_optionsProcessor.GetValueOrDefault("colour", "white")}");
+        return 0;
+    }
+}
 

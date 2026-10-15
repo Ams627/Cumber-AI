@@ -23,14 +23,8 @@ public sealed class CommandRouter
 
         foreach (Type type in assembly.GetTypes())
         {
-            var attribute = type.GetCustomAttribute<CommandAttribute>();
-            if (attribute is null) continue;
-
-
-            if (string.IsNullOrWhiteSpace(attribute.Name))
-            {
-                throw new InvalidOperationException($"{type.FullName} has an empty command name.");
-            }
+            var commandAttributes = type.GetCustomAttributes<CommandAttribute>().ToArray();
+            if (commandAttributes.Length == 0) continue;
 
             if (!type.IsClass || type.IsAbstract || type.ContainsGenericParameters ||
                 !typeof(ICumberCommand).IsAssignableFrom(type))
@@ -39,10 +33,20 @@ public sealed class CommandRouter
                     $"{type.FullName} must be a concrete, non-generic class implementing {nameof(ICumberCommand)}.");
             }
 
-            if (!commandMap.TryAdd(attribute.Name, type))
+            foreach (var attribute in commandAttributes)
             {
-                throw new InvalidOperationException(
-                    $"Command '{attribute.Name}' is declared by both {commandMap[attribute.Name].DeclaringType!.FullName} and {type.FullName}.");
+                // Register attribute's command name against this type:
+
+                if (string.IsNullOrWhiteSpace(attribute.Name))
+                {
+                    throw new InvalidOperationException($"{type.FullName} has an empty command name.");
+                }
+
+                if (!commandMap.TryAdd(attribute.Name, type))
+                {
+                    throw new InvalidOperationException(
+                        $"Command '{attribute.Name}' is declared by both {commandMap[attribute.Name].DeclaringType!.FullName} and {type.FullName}.");
+                }
             }
         }
 

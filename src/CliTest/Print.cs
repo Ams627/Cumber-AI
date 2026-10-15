@@ -5,7 +5,7 @@ class Print : ICumberCommand
 {
     private readonly IOptionsProcessor _optionsProcessor;
 
-    public Print(IOptionsProcessor optionsProcessor, IHorror horror)
+    public Print(IOptionsProcessor optionsProcessor)
     {
         Console.WriteLine("print constructor called");
         _optionsProcessor = optionsProcessor;

@@ -19,6 +19,10 @@ const string commandText = """
 
         -d destination | type=string
 
+    == copy2 - copy a file using type 2 copying
+    Copy a file to a given destination:
+    
+        -d destination | type=string    
     """;
 
 IOptionsProcessor optionsProcessor = OptionsProcessor.FromText(commandText, "FileUtil", args);
@@ -48,5 +52,4 @@ class Settings : ISettings
     public string Name { get; set; } = "Harry";
 }
 
-interface IHorror { }
 

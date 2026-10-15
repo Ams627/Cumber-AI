@@ -1,6 +1,7 @@
 using Cumber;
 
 [Cumber.Command("copy")]
+[Cumber.Command("copy2")]
 class Copy : ICumberCommand
 {
     private readonly IOptionsProcessor _optionsProcessor;

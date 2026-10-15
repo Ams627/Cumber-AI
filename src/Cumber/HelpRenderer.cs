@@ -2,17 +2,28 @@ using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace HelpTextOptions;
+namespace Cumber;
 
 internal static partial class HelpRenderer
 {
     private static readonly Dictionary<string, int> Colours = new(StringComparer.Ordinal)
     {
-        ["black"] = 30, ["red"] = 31, ["green"] = 32, ["yellow"] = 33,
-        ["blue"] = 34, ["magenta"] = 35, ["cyan"] = 36, ["white"] = 37,
-        ["bright-black"] = 90, ["bright-red"] = 91, ["bright-green"] = 92,
-        ["bright-yellow"] = 93, ["bright-blue"] = 94, ["bright-magenta"] = 95,
-        ["bright-cyan"] = 96, ["bright-white"] = 97
+        ["black"] = 30,
+        ["red"] = 31,
+        ["green"] = 32,
+        ["yellow"] = 33,
+        ["blue"] = 34,
+        ["magenta"] = 35,
+        ["cyan"] = 36,
+        ["white"] = 37,
+        ["bright-black"] = 90,
+        ["bright-red"] = 91,
+        ["bright-green"] = 92,
+        ["bright-yellow"] = 93,
+        ["bright-blue"] = 94,
+        ["bright-magenta"] = 95,
+        ["bright-cyan"] = 96,
+        ["bright-white"] = 97
     };
     [GeneratedRegex(@"\x1b\[[0-?]*[ -/]*[@-~]")]
     private static partial Regex AnsiPattern();

@@ -1,12 +1,23 @@
-using HelpTextOptions;
+using Cumber;
 
 const string commandText = """
     = FileUtil - a file utility
+    Please specify one of the following commands:
+
       $(subcommands)
 
-    == Print - print a file
-    -n, --lines  Number of lines | type=int
-    -c, --colour  Output colour | type=string
+    == print - print a file
+    This command prints a file on the console.
+
+    Options:
+        -n, --lines  Number of lines | type=uint
+        -c, --colour  Output colour | type=string
+
+    == copy - copy a file
+    Copy a file to a given destination:
+
+        -d destination | type=string
+
     """;
 
 var processor = OptionsProcessor.FromText(commandText, "FileUtil", args);

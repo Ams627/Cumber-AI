@@ -1,5 +1,5 @@
+using Cumber;
 using System.Globalization;
-using HelpTextOptions;
 using Xunit;
 
 namespace HelpTextOptions.Tests;
@@ -45,7 +45,10 @@ public sealed class ParserTests
         using var error = new StringWriter();
         var result = OptionsProcessor.FromText(definition, program, args, new OptionsProcessorSettings
         {
-            Output = output, Error = error, TerminalWidth = width, ColourMode = colour
+            Output = output,
+            Error = error,
+            TerminalWidth = width,
+            ColourMode = colour
         });
         return (result, output.ToString(), error.ToString());
     }

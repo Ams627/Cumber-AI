@@ -1,6 +1,6 @@
 using System.Globalization;
 
-namespace HelpTextOptions;
+namespace Cumber;
 
 /// <summary>Factory and immutable public result for a single command-line invocation.</summary>
 public sealed class OptionsProcessor : IOptionsProcessor
@@ -21,23 +21,44 @@ public sealed class OptionsProcessor : IOptionsProcessor
     public IReadOnlyList<string> Errors { get; }
 
     /// <summary>Parses definitions and arguments, printing help or diagnostics as required.</summary>
-    public static IOptionsProcessor FromText(string commandText, string programName,
-        string[] args, OptionsProcessorSettings? settings = null)
+    public static IOptionsProcessor FromText(
+            string commandText,
+            string programName,
+            string[] args,
+            OptionsProcessorSettings? settings = null
+        )
     {
         ArgumentNullException.ThrowIfNull(commandText);
         ArgumentException.ThrowIfNullOrEmpty(programName);
         ArgumentNullException.ThrowIfNull(args);
-        if (args.Any(a => a is null)) throw new ArgumentException("Arguments cannot contain null.", nameof(args));
+
+        if (args.Any(a => a is null))
+        {
+            throw new ArgumentException("Arguments cannot contain null.", nameof(args));
+        }
+
         settings ??= new OptionsProcessorSettings();
+
         ArgumentNullException.ThrowIfNull(settings.Output);
         ArgumentNullException.ThrowIfNull(settings.Error);
-        if (settings.TerminalWidth is <= 0) throw new ArgumentOutOfRangeException(nameof(settings), "Width must be positive.");
-        if (!Enum.IsDefined(settings.ColourMode)) throw new ArgumentOutOfRangeException(nameof(settings));
+
+        if (settings.TerminalWidth is <= 0)
+            throw new ArgumentOutOfRangeException(nameof(settings), "Width must be positive.");
+
+        if (!Enum.IsDefined(settings.ColourMode))
+            throw new ArgumentOutOfRangeException(nameof(settings));
+
         var roots = DefinitionParser.Parse(commandText);
+
         // Validate markup in all roots before any user-facing output.
-        foreach (var root in roots.Values) HelpRenderer.Validate(root);
+        foreach (var root in roots.Values)
+        {
+            HelpRenderer.Validate(root);
+        }
+
         if (!roots.TryGetValue(programName, out var rootCommand))
             throw new ArgumentException($"No program root matches '{programName}'.", nameof(programName));
+
         return new OptionsProcessor(rootCommand, args.ToArray(), settings);
     }
 
@@ -51,6 +72,7 @@ public sealed class OptionsProcessor : IOptionsProcessor
         var command = root;
         bool explicitHelp = args.Length > 0 && args[0] == "help";
         int index = explicitHelp ? 1 : 0;
+
         if (explicitHelp)
         {
             for (; index < args.Length; index++)
@@ -88,6 +110,7 @@ public sealed class OptionsProcessor : IOptionsProcessor
         selected = command;
         helpTarget = explicitHelp && path.Count == 0 && errors.Count == 0
             ? root.Children.FirstOrDefault(c => c.CustomHelp) ?? root : command;
+
         foreach (var option in selected.EffectiveOptions)
         {
             if (option.Short is not null) shortOptions.Add(option.Short[0], option);
@@ -95,23 +118,30 @@ public sealed class OptionsProcessor : IOptionsProcessor
             counts.Add(option, 0);
             values.Add(option, []);
         }
+
         if (!explicitHelp && errors.Count == 0)
             ParseArguments(args, index, positional, errors);
+
         HelpRequested = explicitHelp || errors.Count == 0 && !selected.Runnable;
         if (errors.Count == 0 && !HelpRequested)
             foreach (var option in selected.EffectiveOptions)
                 if (counts[option] < option.Minimum)
                     errors.Add($"Option '{option.DisplayName}' must occur at least {option.Minimum} time(s).");
+
         IsValid = errors.Count == 0;
         Errors = errors.AsReadOnly();
         CommandPath = path.AsReadOnly();
         PositionalArguments = positional.AsReadOnly();
+
         if (!IsValid)
         {
             foreach (var error in errors) settings.Error.WriteLine(error);
             settings.Error.WriteLine($"Use '{root.Name} help{(path.Count == 0 ? "" : " " + string.Join(" ", path))}' for help.");
         }
-        else if (HelpRequested) PrintHelp();
+        else if (HelpRequested)
+        {
+            PrintHelp();
+        }
     }
 
     private void ParseArguments(string[] args, int start, List<string> positional, List<string> errors)
@@ -234,7 +264,10 @@ public sealed class OptionsProcessor : IOptionsProcessor
     {
         Type expected = option.Type switch
         {
-            "int" => typeof(int), "uint" => typeof(uint), "float" => typeof(float), "string" => typeof(string),
+            "int" => typeof(int),
+            "uint" => typeof(uint),
+            "float" => typeof(float),
+            "string" => typeof(string),
             _ => throw new InvalidOperationException("Parameterless options have no values.")
         };
         if (typeof(T) != expected)

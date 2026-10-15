@@ -1,7 +1,5 @@
 namespace Cumber;
 
-public enum ColourMode { Auto, Always, Never }
-
 public interface IOptionsProcessor
 {
     IReadOnlyList<string> CommandPath { get; }

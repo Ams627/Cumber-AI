@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 using System.Runtime.ExceptionServices;
 
@@ -5,75 +6,61 @@ namespace Cumber;
 
 public sealed class CommandRouter
 {
-    private readonly Dictionary<string, ConstructorInfo> _constructors;
+    private readonly Dictionary<string, Type> _commandMap;
+    private readonly IServiceProvider _serviceProvider;
 
-    private CommandRouter(Dictionary<string, ConstructorInfo> constructors)
+    private CommandRouter(Dictionary<string, Type> commandMap, IServiceProvider serviceProvider)
     {
-        _constructors = constructors;
+        _commandMap = commandMap;
+        _serviceProvider = serviceProvider;
     }
 
-    public static CommandRouter FromAssembly(Assembly assembly)
+    public static CommandRouter FromAssembly(Assembly assembly, IServiceProvider serviceProvider)
     {
         ArgumentNullException.ThrowIfNull(assembly);
 
-        var constructors = new Dictionary<string, ConstructorInfo>(StringComparer.OrdinalIgnoreCase);
+        var commandMap = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase);
 
         foreach (Type type in assembly.GetTypes())
         {
             var attribute = type.GetCustomAttribute<CommandAttribute>();
-
             if (attribute is null) continue;
+
 
             if (string.IsNullOrWhiteSpace(attribute.Name))
             {
-                throw new InvalidOperationException(
-                    $"{type.FullName} has an empty command name.");
+                throw new InvalidOperationException($"{type.FullName} has an empty command name.");
             }
 
-            if (!type.IsClass ||
-                type.IsAbstract ||
-                type.ContainsGenericParameters ||
+            if (!type.IsClass || type.IsAbstract || type.ContainsGenericParameters ||
                 !typeof(ICumberCommand).IsAssignableFrom(type))
             {
                 throw new InvalidOperationException(
-                    $"{type.FullName} must be a concrete, non-generic " +
-                    $"class implementing {nameof(ICumberCommand)}.");
+                    $"{type.FullName} must be a concrete, non-generic class implementing {nameof(ICumberCommand)}.");
             }
 
-            ConstructorInfo? constructor = type.GetConstructor(
-                BindingFlags.Public | BindingFlags.Instance,
-                binder: null,
-                types: [typeof(IOptionsProcessor)],
-                modifiers: null);
-
-            if (constructor is null)
-            {
-                throw new InvalidOperationException($"{type.FullName} must have a public constructor taking exactly one {nameof(IOptionsProcessor)}.");
-            }
-
-            if (!constructors.TryAdd(attribute.Name, constructor))
+            if (!commandMap.TryAdd(attribute.Name, type))
             {
                 throw new InvalidOperationException(
-                    $"Command '{attribute.Name}' is declared by both {constructors[attribute.Name].DeclaringType!.FullName} and {type.FullName}.");
+                    $"Command '{attribute.Name}' is declared by both {commandMap[attribute.Name].DeclaringType!.FullName} and {type.FullName}.");
             }
         }
 
-        return new CommandRouter(constructors);
+        return new CommandRouter(commandMap, serviceProvider);
     }
 
-    public int Execute(string commandName, IOptionsProcessor processor)
+    public int Execute()
     {
-        ArgumentNullException.ThrowIfNull(commandName);
-        ArgumentNullException.ThrowIfNull(processor);
-
-        if (!_constructors.TryGetValue(commandName, out var constructor))
+        var commandName = (_serviceProvider.GetService<IOptionsProcessor>()?.CommandPath?[0]) ??
+                throw new InvalidOperationException("null command: a command was not properly specified.");
+        if (!_commandMap.TryGetValue(commandName!, out var type))
             throw new ArgumentException($"No handler is registered for command '{commandName}'.", nameof(commandName));
 
         ICumberCommand command;
 
         try
         {
-            command = (ICumberCommand)constructor.Invoke([processor]);
+            command = (ICumberCommand)ActivatorUtilities.CreateInstance(_serviceProvider, type);
         }
         catch (TargetInvocationException ex) when (ex.InnerException is not null)
         {

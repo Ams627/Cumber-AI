@@ -1,4 +1,5 @@
 using Cumber;
+using Microsoft.Extensions.DependencyInjection;
 
 const string commandText = """
     = FileUtil - a file utility
@@ -20,52 +21,32 @@ const string commandText = """
 
     """;
 
-IOptionsProcessor processor = OptionsProcessor.FromText(commandText, "FileUtil", args);
+IOptionsProcessor optionsProcessor = OptionsProcessor.FromText(commandText, "FileUtil", args);
 
-if (!processor.IsValid)
+if (!optionsProcessor.IsValid)
     return 2;
 
-if (processor.HelpRequested)
+if (optionsProcessor.HelpRequested)
     return 0;
 
-var router = CommandRouter.FromAssembly(typeof(Program).Assembly);
-return router.Execute(args[0], processor);
 
-[Cumber.Command("copy")]
-class Copy : ICumberCommand
+var services = new ServiceCollection();
+ISettings settings = new Settings();
+services.AddSingleton<ISettings>(settings);
+services.AddSingleton<IOptionsProcessor>(optionsProcessor);
+using var serviceProvider = services.BuildServiceProvider();
+
+var router = CommandRouter.FromAssembly(typeof(Program).Assembly, serviceProvider);
+return router.Execute();
+
+interface ISettings
 {
-    private readonly IOptionsProcessor _optionsProcessor;
-
-    public Copy(IOptionsProcessor optionsProcessor)
-    {
-        Console.WriteLine("copy constructor called");
-        _optionsProcessor = optionsProcessor;
-    }
-    public int Execute()
-    {
-        Console.WriteLine($"Command: {string.Join(" ", _optionsProcessor.CommandPath)}");
-        Console.WriteLine($"Dest: {_optionsProcessor.GetValueOrDefault('d', "c:\\temp")}");
-        return 0;
-    }
+    string Name { get; set; }
+}
+class Settings : ISettings
+{
+    public string Name { get; set; } = "Harry";
 }
 
-
-[Cumber.Command("print")]
-class Print : ICumberCommand
-{
-    private readonly IOptionsProcessor _optionsProcessor;
-
-    public Print(IOptionsProcessor optionsProcessor)
-    {
-        Console.WriteLine("print constructor called");
-        _optionsProcessor = optionsProcessor;
-    }
-    public int Execute()
-    {
-        Console.WriteLine($"Command: {string.Join(" ", _optionsProcessor.CommandPath)}");
-        Console.WriteLine($"Lines: {_optionsProcessor.GetValueOrDefault("lines", 10u)}");
-        Console.WriteLine($"Colour: {_optionsProcessor.GetValueOrDefault("colour", "white")}");
-        return 0;
-    }
-}
+interface IHorror { }
 

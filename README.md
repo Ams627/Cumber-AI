@@ -1,4 +1,4 @@
-# HelpTextOptions
+# Cumber
 
 A C# library that derives command-line options and help from one readable definition.
 Targets .NET 8 (and can be used by later .NET applications). The library has no external

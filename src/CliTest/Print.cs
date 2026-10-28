@@ -1,7 +1,7 @@
 using Cumber;
 
 [Cumber.Command("print")]
-class Print : ICumberCommand
+internal class Print : ICumberCommand
 {
     private readonly IOptionsProcessor _optionsProcessor;
 

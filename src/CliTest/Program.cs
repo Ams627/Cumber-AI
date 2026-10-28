@@ -8,21 +8,16 @@ const string commandText = """
       $(subcommands)
 
     == print - print a file
-    This command prints a file on the console.
+    This command prints a file on [cyan]#the console#.
 
     Options:
         -n, --lines  Number of lines | type=uint
         -c, --colour  Output colour | type=string
 
     == copy - copy a file
-    Copy a file to a given destination:
+    _Copy_ a *file* to a given destination:
 
         -d destination | type=string minOccurs=0 maxOccurs=*
-
-    == copy2 - copy a file using type 2 copying
-    Copy a file to a given destination:
-    
-        -d destination | type=string    
     """;
 
 IOptionsProcessor optionsProcessor = OptionsProcessor.FromText(commandText, "FileUtil", args);
@@ -35,19 +30,19 @@ if (optionsProcessor.HelpRequested)
 
 var services = new ServiceCollection();
 ISettings settings = new Settings();
-services.AddSingleton<ISettings>(settings);
-services.AddSingleton<IOptionsProcessor>(optionsProcessor);
+services.AddSingleton(settings);
+services.AddSingleton(optionsProcessor);
 using var serviceProvider = services.BuildServiceProvider();
 
 var router = CommandRouter.FromAssembly(typeof(Program).Assembly, serviceProvider);
 router.Execute();
 return 0;
 
-interface ISettings
+internal interface ISettings
 {
     string Name { get; set; }
 }
-class Settings : ISettings
+internal class Settings : ISettings
 {
     public string Name { get; set; } = "Harry";
 }

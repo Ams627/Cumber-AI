@@ -17,7 +17,7 @@ const string commandText = """
     == copy - copy a file
     Copy a file to a given destination:
 
-        -d destination | type=string
+        -d destination | type=string minOccurs=0 maxOccurs=*
 
     == copy2 - copy a file using type 2 copying
     Copy a file to a given destination:
@@ -28,11 +28,10 @@ const string commandText = """
 IOptionsProcessor optionsProcessor = OptionsProcessor.FromText(commandText, "FileUtil", args);
 
 if (!optionsProcessor.IsValid)
-    return 2;
+    return -1;
 
 if (optionsProcessor.HelpRequested)
     return 0;
-
 
 var services = new ServiceCollection();
 ISettings settings = new Settings();
@@ -41,7 +40,8 @@ services.AddSingleton<IOptionsProcessor>(optionsProcessor);
 using var serviceProvider = services.BuildServiceProvider();
 
 var router = CommandRouter.FromAssembly(typeof(Program).Assembly, serviceProvider);
-return router.Execute();
+router.Execute();
+return 0;
 
 interface ISettings
 {

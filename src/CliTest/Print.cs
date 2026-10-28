@@ -10,12 +10,12 @@ class Print : ICumberCommand
         Console.WriteLine("print constructor called");
         _optionsProcessor = optionsProcessor;
     }
-    public int Execute()
+    public void Execute()
     {
         Console.WriteLine($"Command: {string.Join(" ", _optionsProcessor.CommandPath)}");
         Console.WriteLine($"Lines: {_optionsProcessor.GetValueOrDefault("lines", 10u)}");
         Console.WriteLine($"Colour: {_optionsProcessor.GetValueOrDefault("colour", "white")}");
-        return 0;
+        return;
     }
 }
 

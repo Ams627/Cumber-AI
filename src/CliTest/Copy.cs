@@ -12,11 +12,11 @@ class Copy : ICumberCommand
         Console.WriteLine("copy constructor called");
         _optionsProcessor = optionsProcessor;
     }
-    public int Execute()
+    public void Execute()
     {
         Console.WriteLine($"Command: {string.Join(" ", _optionsProcessor.CommandPath)}");
-        Console.WriteLine($"Dest: {_optionsProcessor.GetValueOrDefault('d', "c:\\temp")}");
-        return 0;
+        Console.WriteLine($"Dest: {string.Join(" ", _optionsProcessor.GetValues<string>('d'))}");
+        return;
     }
 }
 

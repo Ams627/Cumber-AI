@@ -53,7 +53,7 @@ public sealed class CommandRouter
         return new CommandRouter(commandMap, serviceProvider);
     }
 
-    public int Execute()
+    public void Execute()
     {
         var commandName = (_serviceProvider.GetService<IOptionsProcessor>()?.CommandPath?[0]) ??
                 throw new InvalidOperationException("null command: a command was not properly specified.");
@@ -73,6 +73,6 @@ public sealed class CommandRouter
             throw;
         }
 
-        return command.Execute();
+        command.Execute();
     }
 }
